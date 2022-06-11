@@ -1,4 +1,4 @@
-import React, { Children, Ref, forwardRef, isValidElement, cloneElement } from 'react';
+import React, { Children, Ref, forwardRef, isValidElement, cloneElement, useMemo, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { useLocaleReceiver } from '../../locale/LocalReceiver';
 import { getSelectValueArr } from '../util/helper';
@@ -55,6 +55,25 @@ const PopupContent = forwardRef((props: SelectPopupProps, ref: Ref<HTMLDivElemen
     panelTopContent,
     panelBottomContent,
   } = props;
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const startIndex = useRef(0);
+  const LEN = 15;
+  const minHeight = useMemo(() => options.length * 28, [options]);
+
+  const render = (ev: Event) => {
+    console.log('ev', ev);
+  };
+
+  const scroll = scrollRef.current;
+  useEffect(() => {
+    if (scroll) {
+      scroll.style.minHeight = `${minHeight}px`;
+      scroll.addEventListener('scroll', render);
+
+      () => scroll.removeEventListener('scroll', render);
+    }
+  }, [minHeight, scroll]);
 
   // 国际化文本初始化
   const [local, t] = useLocaleReceiver('select');
@@ -130,19 +149,21 @@ const PopupContent = forwardRef((props: SelectPopupProps, ref: Ref<HTMLDivElemen
   const isEmpty = (Array.isArray(childrenWithProps) && !childrenWithProps.length) || (options && options.length === 0);
 
   return (
-    <div
-      ref={ref}
-      className={classNames(`${classPrefix}-select__dropdown-inner`, {
-        [`${classPrefix}-select__dropdown-inner--size-s`]: size === 'small',
-        [`${classPrefix}-select__dropdown-inner--size-l`]: size === 'large',
-        [`${classPrefix}-select__dropdown-inner--size-m`]: size === 'medium',
-      })}
-    >
-      {panelTopContent}
-      {isEmpty && <div className={`${classPrefix}-select__empty`}>{empty ? empty : <p>{emptyText}</p>}</div>}
-      {!isEmpty && loading && <div className={`${classPrefix}-select__loading-tips`}>{loadingText}</div>}
-      {!isEmpty && !loading && renderOptions()}
-      {panelBottomContent}
+    <div ref={scrollRef}>
+      <div
+        ref={ref}
+        className={classNames(`${classPrefix}-select__dropdown-inner`, {
+          [`${classPrefix}-select__dropdown-inner--size-s`]: size === 'small',
+          [`${classPrefix}-select__dropdown-inner--size-l`]: size === 'large',
+          [`${classPrefix}-select__dropdown-inner--size-m`]: size === 'medium',
+        })}
+      >
+        {panelTopContent}
+        {isEmpty && <div className={`${classPrefix}-select__empty`}>{empty ? empty : <p>{emptyText}</p>}</div>}
+        {!isEmpty && loading && <div className={`${classPrefix}-select__loading-tips`}>{loadingText}</div>}
+        {/* {!isEmpty && !loading && renderOptions()} */}
+        {panelBottomContent}
+      </div>
     </div>
   );
 });
